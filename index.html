@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOL Synergy - Training Feedback Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (xlsx) for Excel Upload & Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Chart.js for Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Plugin for Data Labels -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+            body { 
+                background: white !important; 
+                color: black !important; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            header, footer, #setupSection, .no-print { display: none !important; }
+            #dashboardSection, #printMetaHeader { display: block !important; }
+            .shadow-sm, .shadow { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+            .chart-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+                max-width: 48% !important;
+                display: inline-block !important;
+            }
+            #chartsContainer {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goHome()">
+                <div class="bg-white text-blue-900 p-2 rounded-lg font-bold text-xl shadow">
+                    <i class="fa-solid fa-anchor"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">MOL Synergy Marine (India) Pvt. Ltd.</h1>
+                    <p class="text-xs text-blue-200">Feedback & Reporting Management System</p>
+                </div>
+            </div>
+            <button id="homeBtn" onclick="goHome()" class="hidden bg-blue-800 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                <i class="fa-solid fa-house"></i><span>Home Dashboard</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+
+        <!-- HOME VIEW (3 Cards) -->
+        <div id="homeView">
+            <div class="mb-8 text-center">
+                <h2 class="text-2xl font-bold text-slate-900">Training Feedback & Report Center</h2>
+                <p class="text-slate-600 mt-1">Select a reporting category below to upload, analyze, and convert feedback data into live dashboards.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1: Monthly Feedback Report -->
+                <div onclick="openReportModule('Monthly')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Monthly Feedback Report</h3>
+                        <p class="text-sm text-slate-500">Upload and process monthly training feedback excel sheets, filter by location & course, and view instant analytics.</p>
+                    </div>
+                    <div class="mt-6 flex items-center text-blue-600 font-semibold text-sm">
+                        <span>Open Module</span> <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+
+                <!-- Card 2: Quarterly Feedback Report -->
+                <div onclick="openReportModule('Quarterly')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-indigo-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Quarterly Feedback Report</h3>
+                        <p class="text-sm text-slate-500">Analyze consolidated quarterly performance metrics, trends, and trainer effectiveness summaries.</p>
+                    </div>
+                    <div class="mt-6 flex items-center text-indigo-600 font-semibold text-sm">
+                        <span>Open Module</span> <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+
+                <!-- Card 3: Financial Yearly Feedback Report -->
+                <div onclick="openReportModule('Yearly')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-emerald-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Financial Yearly Feedback</h3>
+                        <p class="text-sm text-slate-500">Review comprehensive annual feedback audits, total ratings distribution, and year-over-year growth.</p>
+                    </div>
+                    <div class="mt-6 flex items-center text-emerald-600 font-semibold text-sm">
+                        <span>Open Module</span> <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPORT MODULE VIEW -->
+        <div id="reportModuleView" class="hidden space-y-6">
+            
+            <!-- Module Title Banner -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center no-print">
+                <div>
+                    <span id="moduleBadge" class="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full uppercase">Monthly</span>
+                    <h2 id="moduleTitle" class="text-xl font-bold text-slate-900 mt-1">Feedback Report Analysis</h2>
+                </div>
+                <button onclick="resetModule()" class="text-sm text-slate-600 hover:text-red-600 font-medium">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Start Over / Change File
+                </button>
+            </div>
+
+            <!-- STEP 1: Upload & Parameters Form -->
+            <div id="setupSection" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                <h3 class="text-lg font-bold text-slate-800 border-b pb-2"><i class="fa-solid fa-sliders mr-2 text-blue-600"></i>Configure Parameters & Upload Data</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Dynamic Time Period Field (Month, Quarter, or Financial Year) -->
+                    <div id="timePeriodWrapper">
+                        <label id="timePeriodLabel" class="block text-sm font-semibold text-slate-700 mb-2">Select Month</label>
+                        <select id="reportTimePeriod" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Choose Month</option>
+                            <option>January</option><option>February</option><option>March</option><option>April</option>
+                            <option>May</option><option>June</option><option>July</option><option>August</option>
+                            <option>September</option><option>October</option><option>November</option><option>December</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Dropdown (Hidden for Yearly report since Financial Year is already selected) -->
+                    <div id="yearFieldWrapper">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Select Year</label>
+                        <select id="reportYear" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Choose Year</option>
+                            <option>2025-2026</option>
+                            <option>2026-2027</option>
+                        </select>
+                    </div>
+
+                    <!-- Training Type (Physical / Online) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Training Mode</label>
+                        <select id="trainingMode" onchange="toggleLocationField()" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Select Mode</option>
+                            <option value="Physical">Physical Course</option>
+                            <option value="Online">Online Course</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Location Field -->
+                <div id="locationWrapper" class="hidden">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Branch Location</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <label class="border rounded-xl p-3 flex items-center space-x-3 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="location" value="Chennai" class="text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm font-medium">Chennai</span>
+                        </label>
+                        <label class="border rounded-xl p-3 flex items-center space-x-3 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="location" value="Mumbai" class="text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm font-medium">Mumbai</span>
+                        </label>
+                        <label class="border rounded-xl p-3 flex items-center space-x-3 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="location" value="New Delhi" class="text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm font-medium">New Delhi</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Excel Upload Input -->
+                <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer relative">
+                    <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" onchange="handleFileUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                    <div class="space-y-2">
+                        <i class="fa-solid fa-file-excel text-3xl text-emerald-600"></i>
+                        <p class="text-sm font-semibold text-slate-700">Upload Feedback Excel / CSV File</p>
+                        <p class="text-xs text-slate-500">Drag & drop or click to browse</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Dashboard & Analytics View -->
+            <div id="dashboardSection" class="hidden space-y-6">
+
+                <!-- Print Meta Header -->
+                <div id="printMetaHeader" class="hidden bg-blue-900 text-white p-4 rounded-xl mb-4">
+                    <h3 id="printReportTitle" class="text-lg font-bold">MOL Synergy - Monthly Feedback Report</h3>
+                    <p id="printMetaDetails" class="text-xs mt-1 text-blue-200"></p>
+                </div>
+
+                <!-- Filter Controls & Actions Bar -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Filter by Course</label>
+                            <select id="courseFilter" onchange="applyFilters()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm outline-none">
+                                <option value="All">All Courses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Select Columns</label>
+                            <div class="relative" id="dropdownContainer">
+                                <button onclick="toggleColumnDropdown(event)" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm outline-none flex items-center justify-between w-48">
+                                    <span id="selectedColumnsBtnText">Select Columns</span>
+                                    <i class="fa-solid fa-chevron-down text-xs ml-2"></i>
+                                </button>
+                                <div id="columnDropdownList" class="hidden absolute left-0 mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 max-h-60 overflow-y-auto space-y-2">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 shadow transition">
+                            <i class="fa-solid fa-print"></i><span>Print Report</span>
+                        </button>
+                        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 shadow transition">
+                            <i class="fa-solid fa-file-pdf"></i><span>Save as PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rating Scale Color Legend -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span class="font-bold text-slate-700"><i class="fa-solid fa-palette mr-1 text-blue-600"></i>Rating Scale Legend:</span>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded-full bg-emerald-700 inline-block"></span><span>Strongly Agree (5)</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span><span>Agree (4)</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span><span>OK (3)</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span><span>Disagree (2)</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded-full bg-red-800 inline-block"></span><span>Strongly Disagree (1)</span></span>
+                    </div>
+                </div>
+
+                <!-- 4 Summary Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Total Training Done</p>
+                            <h4 id="statTotalTrainings" class="text-xl font-bold text-slate-900">0</h4>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Total Feedback Received</p>
+                            <h4 id="statTotalFeedback" class="text-xl font-bold text-slate-900">0</h4>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-face-smile"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Total Positive Ratings % (3,4,5)</p>
+                            <h4 id="statPositivePct" class="text-xl font-bold text-emerald-600">0%</h4>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-face-frown"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Total Negative % (1,2)</p>
+                            <h4 id="statNegativePct" class="text-xl font-bold text-rose-600">0%</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Matrix Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 border-b bg-slate-900 text-white font-bold text-sm flex justify-between items-center">
+                        <span><i class="fa-solid fa-table mr-2 text-blue-400"></i>Feedback Distribution Matrix</span>
+                        <span id="recordCountBadge" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1 rounded-full">0 Records</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-800 text-white uppercase text-xs">
+                                <tr>
+                                    <th class="p-3 w-16">SR.</th>
+                                    <th class="p-3">QUESTION / COLUMN</th>
+                                    <th class="p-3 text-center">STRONGLY DISAGREE (1)</th>
+                                    <th class="p-3 text-center">DISAGREE (2)</th>
+                                    <th class="p-3 text-center">OK (3)</th>
+                                    <th class="p-3 text-center">AGREE (4)</th>
+                                    <th class="p-3 text-center">STRONGLY AGREE (5)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matrixTableBody" class="divide-y divide-slate-200 text-xs">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                            <tfoot id="matrixTableFooter" class="bg-slate-900 text-white font-bold">
+                                <!-- Dynamic Totals -->
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Dynamic Charts for Selected Columns -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-chart-pie mr-2 text-blue-600"></i>Selected Columns Visual Analytics
+                    </h3>
+                    <div id="chartsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Professional Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-12 text-center text-xs text-slate-500 no-print">
+        Designed and developed by <a href="https://www.linkedin.com/in/gaurav84000" target="_blank" class="text-blue-600 font-medium hover:underline">Gaurav Srivastav</a>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let rawData = [];
+        let filteredData = [];
+        let columns = [];
+        let selectedColumns = [];
+        let chartInstances = {};
+        let currentModuleType = 'Monthly';
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('columnDropdownList');
+            const container = document.getElementById('dropdownContainer');
+            if(dropdown && container && !container.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function openReportModule(type) {
+            currentModuleType = type;
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('reportModuleView').classList.remove('hidden');
+            document.getElementById('homeBtn').classList.remove('hidden');
+
+            const badge = document.getElementById('moduleBadge');
+            const title = document.getElementById('moduleTitle');
+            const timeLabel = document.getElementById('timePeriodLabel');
+            const timeSelect = document.getElementById('reportTimePeriod');
+            const yearWrapper = document.getElementById('yearFieldWrapper');
+
+            if(type === 'Monthly') {
+                badge.innerText = "Monthly";
+                title.innerText = "Monthly Feedback Report Analysis";
+                timeLabel.innerText = "Select Month";
+                yearWrapper.classList.remove('hidden');
+                timeSelect.innerHTML = `
+                    <option value="">Choose Month</option>
+                    <option>January</option><option>February</option><option>March</option><option>April</option>
+                    <option>May</option><option>June</option><option>July</option><option>August</option>
+                    <option>September</option><option>October</option><option>November</option><option>December</option>
+                `;
+            } else if(type === 'Quarterly') {
+                badge.innerText = "Quarterly";
+                title.innerText = "Quarterly Feedback Report Analysis";
+                timeLabel.innerText = "Select Quarter";
+                yearWrapper.classList.remove('hidden');
+                timeSelect.innerHTML = `
+                    <option value="">Choose Quarter</option>
+                    <option>April - June</option>
+                    <option>July - September</option>
+                    <option>October - December</option>
+                    <option>January - March</option>
+                `;
+            } else if(type === 'Yearly') {
+                badge.innerText = "Financial Yearly";
+                title.innerText = "Financial Yearly Feedback Report Analysis";
+                timeLabel.innerText = "Select Financial Year";
+                yearWrapper.classList.add('hidden'); // Hide separate Year dropdown for Yearly report
+                timeSelect.innerHTML = `
+                    <option value="">Choose Financial Year</option>
+                    <option>2025-2026</option>
+                    <option>2026-2027</option>
+                `;
+            }
+        }
+
+        function goHome() {
+            document.getElementById('reportModuleView').classList.add('hidden');
+            document.getElementById('homeView').classList.remove('hidden');
+            document.getElementById('homeBtn').classList.add('hidden');
+            resetModule();
+        }
+
+        function resetModule() {
+            document.getElementById('setupSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('excelFile').value = '';
+            rawData = [];
+            filteredData = [];
+            selectedColumns = [];
+        }
+
+        function toggleLocationField() {
+            const mode = document.getElementById('trainingMode').value;
+            const locWrapper = document.getElementById('locationWrapper');
+            if(mode === 'Physical') {
+                locWrapper.classList.remove('hidden');
+            } else {
+                locWrapper.classList.add('hidden');
+            }
+        }
+
+        function toggleColumnDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('columnDropdownList');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const timePeriod = document.getElementById('reportTimePeriod').value;
+            const year = currentModuleType === 'Yearly' ? timePeriod : document.getElementById('reportYear').value;
+            const mode = document.getElementById('trainingMode').value;
+
+            if(!timePeriod || (currentModuleType !== 'Yearly' && !year) || !mode) {
+                alert('Please fill out all setup parameters before uploading the Excel file.');
+                event.target.value = '';
+                return;
+            }
+
+            let loc = "";
+            if(mode === 'Physical') {
+                const selLoc = document.querySelector('input[name="location"]:checked');
+                loc = selLoc ? ` | Location: ${selLoc.value}` : "";
+            }
+
+            let reportTitleText = `MOL Synergy - ${currentModuleType} Feedback Report`;
+            document.getElementById('printReportTitle').innerText = reportTitleText;
+            
+            if(currentModuleType === 'Yearly') {
+                document.getElementById('printMetaDetails').innerText = `Financial Year: ${timePeriod} | Mode: ${mode}${loc}`;
+            } else {
+                document.getElementById('printMetaDetails').innerText = `${currentModuleType === 'Quarterly' ? 'Quarter' : 'Month'}: ${timePeriod} | Year: ${year} | Mode: ${mode}${loc}`;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                rawData = XLSX.utils.sheet_to_json(worksheet);
+
+                if(rawData.length === 0) {
+                    alert('The uploaded file is empty.');
+                    return;
+                }
+
+                columns = Object.keys(rawData[0]);
+                selectedColumns = []; // Default unchecked
+
+                initDashboard();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function initDashboard() {
+            document.getElementById('setupSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+
+            const courseFilter = document.getElementById('courseFilter');
+            courseFilter.innerHTML = '<option value="All">All Courses</option>';
+            
+            let courseKey = columns.find(c => /course|subject|topic|title/i.test(c)) || columns[0];
+            const courses = [...new Set(rawData.map(row => row[courseKey]))];
+            courses.forEach(c => {
+                if(c) {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    courseFilter.appendChild(opt);
+                }
+            });
+
+            populateColumnDropdown();
+            applyFilters();
+        }
+
+        function populateColumnDropdown() {
+            const dropdownList = document.getElementById('columnDropdownList');
+            dropdownList.innerHTML = '';
+
+            columns.forEach(col => {
+                const label = document.createElement('label');
+                label.className = "flex items-center space-x-2 text-xs cursor-pointer hover:bg-slate-50 p-1 rounded";
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = "checkbox";
+                checkbox.value = col;
+                checkbox.checked = selectedColumns.includes(col);
+                checkbox.className = "rounded text-blue-600 focus:ring-blue-500";
+                checkbox.onchange = function() {
+                    if(this.checked) {
+                        if(!selectedColumns.includes(col)) selectedColumns.push(col);
+                    } else {
+                        selectedColumns = selectedColumns.filter(c => c !== col);
+                    }
+                    updateButtonText();
+                    updateDashboardView();
+                };
+
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(col));
+                dropdownList.appendChild(label);
+            });
+            updateButtonText();
+        }
+
+        function updateButtonText() {
+            const btnText = document.getElementById('selectedColumnsBtnText');
+            if(selectedColumns.length === 0) {
+                btnText.innerText = "Select Columns";
+            } else if(selectedColumns.length === columns.length) {
+                btnText.innerText = "All Columns Selected";
+            } else {
+                btnText.innerText = `${selectedColumns.length} Columns Selected`;
+            }
+        }
+
+        function applyFilters() {
+            const selectedCourse = document.getElementById('courseFilter').value;
+            let courseKey = columns.find(c => /course|subject|topic|title/i.test(c)) || columns[0];
+
+            if(selectedCourse === 'All') {
+                filteredData = [...rawData];
+            } else {
+                filteredData = rawData.filter(row => row[courseKey] === selectedCourse);
+            }
+
+            updateDashboardView();
+        }
+
+        function updateDashboardView() {
+            updateMetrics();
+            updateMatrixTable();
+            updateCharts();
+        }
+
+        function updateMetrics() {
+            const totalTrainings = filteredData.length;
+            const totalFeedback = filteredData.length;
+
+            let positiveCount = 0;
+            let negativeCount = 0;
+
+            filteredData.forEach(row => {
+                selectedColumns.forEach(col => {
+                    let val = Number(row[col]);
+                    if(!isNaN(val)) {
+                        if(val === 3 || val === 4 || val === 5) positiveCount++;
+                        if(val === 1 || val === 2) negativeCount++;
+                    }
+                });
+            });
+
+            const totalRatingsCount = totalTrainings * selectedColumns.length;
+            const posPct = totalRatingsCount > 0 ? ((positiveCount / totalRatingsCount) * 100).toFixed(1) : 0;
+            const negPct = totalRatingsCount > 0 ? ((negativeCount / totalRatingsCount) * 100).toFixed(1) : 0;
+
+            document.getElementById('statTotalTrainings').innerText = totalTrainings;
+            document.getElementById('statTotalFeedback').innerText = totalFeedback;
+            document.getElementById('statPositivePct').innerText = posPct + '%';
+            document.getElementById('statNegativePct').innerText = negPct + '%';
+            document.getElementById('recordCountBadge').innerText = totalTrainings + ' Records';
+        }
+
+        function updateMatrixTable() {
+            const tbody = document.getElementById('matrixTableBody');
+            const tfoot = document.getElementById('matrixTableFooter');
+            tbody.innerHTML = '';
+
+            let totals = { s1: 0, s2: 0, s3: 0, s4: 0, s5: 0 };
+
+            if(selectedColumns.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Please select at least one column from the dropdown above.</td></tr>`;
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            selectedColumns.forEach((col, index) => {
+                let c1 = 0, c2 = 0, c3 = 0, c4 = 0, c5 = 0;
+
+                filteredData.forEach(row => {
+                    let val = Number(row[col]);
+                    if(val === 1) c1++;
+                    else if(val === 2) c2++;
+                    else if(val === 3) c3++;
+                    else if(val === 4) c4++;
+                    else if(val === 5) c5++;
+                });
+
+                totals.s1 += c1;
+                totals.s2 += c2;
+                totals.s3 += c3;
+                totals.s4 += c4;
+                totals.s5 += c5;
+
+                let tr = `<tr class="hover:bg-slate-50">
+                    <td class="p-3 font-medium">${index + 1}</td>
+                    <td class="p-3 font-semibold text-slate-900">${col}</td>
+                    <td class="p-3 text-center">${c1}</td>
+                    <td class="p-3 text-center">${c2}</td>
+                    <td class="p-3 text-center">${c3}</td>
+                    <td class="p-3 text-center">${c4}</td>
+                    <td class="p-3 text-center">${c5}</td>
+                </tr>`;
+                tbody.innerHTML += tr;
+            });
+
+            tfoot.innerHTML = `<tr>
+                <td colspan="2" class="p-3 uppercase">Total</td>
+                <td class="p-3 text-center">${totals.s1}</td>
+                <td class="p-3 text-center">${totals.s2}</td>
+                <td class="p-3 text-center">${totals.s3}</td>
+                <td class="p-3 text-center">${totals.s4}</td>
+                <td class="p-3 text-center">${totals.s5}</td>
+            </tr>`;
+        }
+
+        function updateCharts() {
+            const container = document.getElementById('chartsContainer');
+            container.innerHTML = '';
+
+            Object.values(chartInstances).forEach(chart => chart.destroy());
+            chartInstances = {};
+
+            if(selectedColumns.length === 0) return;
+
+            selectedColumns.forEach((col, index) => {
+                let c1 = 0, c2 = 0, c3 = 0, c4 = 0, c5 = 0;
+
+                filteredData.forEach(row => {
+                    let val = Number(row[col]);
+                    if(val === 1) c1++;
+                    else if(val === 2) c2++;
+                    else if(val === 3) c3++;
+                    else if(val === 4) c4++;
+                    else if(val === 5) c5++;
+                });
+
+                let totalResp = c1 + c2 + c3 + c4 + c5;
+
+                const card = document.createElement('div');
+                card.className = "chart-card bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between";
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3 gap-2">
+                        <h4 class="text-xs font-bold text-slate-800 break-words w-full" title="${col}">${col}</h4>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">Total: ${totalResp}</span>
+                    </div>
+                    <div class="relative h-48 flex justify-center items-center">
+                        <canvas id="chart_${index}"></canvas>
+                    </div>
+                    <div class="mt-3 flex flex-wrap justify-center gap-2 text-[10px] text-slate-500">
+                        <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-red-800"></span><span>1: Strongly Disagree</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-red-400"></span><span>2: Disagree</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span><span>3: OK</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>4: Agree</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-emerald-700"></span><span>5: Strongly Agree</span></span>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                const ctx = document.getElementById(`chart_${index}`).getContext('2d');
+                chartInstances[`chart_${index}`] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Strongly Disagree', 'Disagree', 'OK', 'Agree', 'Strongly Agree'],
+                        datasets: [{
+                            data: [c1, c2, c3, c4, c5],
+                            backgroundColor: ['#991b1b', '#f87171', '#fbbf24', '#34d399', '#047857']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 10 },
+                                display: function(context) {
+                                    let sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    let value = context.dataset.data[context.dataIndex];
+                                    if(sum === 0 || value === 0) return false;
+                                    let percentage = (value * 100) / sum;
+                                    return percentage >= 3;
+                                },
+                                formatter: (value, ctx) => {
+                                    let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    let percentage = (value * 100 / sum).toFixed(1) + "%";
+                                    return `${percentage}`;
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels]
+                });
+            });
+        }
+    </script>
+</body>
+</html>
